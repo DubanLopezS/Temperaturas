@@ -39,6 +39,16 @@ public class ServicioTemperatura {
                 .collect(Collectors.toList());
     }
 
+
+    //GRAFICA DE BARRAS
+    public static Map<String, Double> calcularPromedioPorCiudad(List<Temperatura> datos) {
+        return datos.stream()
+            .collect(Collectors.groupingBy(Temperatura::getCiudad, Collectors.averagingDouble(Temperatura::getTemperatura)));
+    }
+
+
+
+    // CIUDADE CON MAYOR Y MENOR TEMPERATURA
     public static List<Temperatura> filtrarPorFechaEspecifica(List<Temperatura> datos, LocalDate especifica) {
         return datos.stream()
                 .filter(temp -> temp.getFecha().equals(especifica))
@@ -74,7 +84,5 @@ public class ServicioTemperatura {
         ciudades.put("Ciudad menos calurosa:", getCiudadMasFria(datosFiltrados).orElse("No disponible"));
     
         return ciudades;
-    }
-    
-
+    }    
 }

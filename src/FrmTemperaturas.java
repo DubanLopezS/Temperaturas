@@ -1,4 +1,11 @@
 import javax.swing.*;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 import com.toedter.calendar.JDateChooser;
 
 import entidades.Temperatura;
@@ -34,11 +41,12 @@ public class FrmTemperaturas extends JFrame {
         setSize(700, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 
+
         JToolBar tb = new JToolBar();
 
         JButton btnCiudades = new JButton();
         btnCiudades.setIcon(new ImageIcon(getClass().getResource("/iconos/Datos.png")));
-        btnCiudades.setToolTipText("Ciudades de la fecha seleccionada");
+        btnCiudades.setToolTipText("Ciudades Mayor y Menor Temperatura");
         btnCiudades.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 btnCiudadesClick();
@@ -50,10 +58,10 @@ public class FrmTemperaturas extends JFrame {
         
         JButton btnGraficar = new JButton();
         btnGraficar.setIcon(new ImageIcon(getClass().getResource("/iconos/Grafica.png")));
-        btnGraficar.setToolTipText("Grafica Temperaturas vs Ciudad");
+        btnGraficar.setToolTipText("Gráfica Promedio Temperaturas vs Ciudad");
         btnGraficar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                //btnGraficarClick();
+                btnGraficarClick();
             }
         });
         tb.add(Box.createHorizontalStrut(300));
@@ -100,9 +108,9 @@ public class FrmTemperaturas extends JFrame {
 
         tpTemperatura = new JTabbedPane();
         tpTemperatura.addTab("Gráfica", spGrafica);
-        tpTemperatura.addTab("Temp Menor y Mayor", pnlCiudades);
+        tpTemperatura.addTab("Temperatura Menor y Mayor", pnlCiudades);
 
-        //Agregar componentes
+        
         pnlTemperatura.add(pnlDatosProceso);
         pnlTemperatura.add(tpTemperatura);
 
@@ -117,11 +125,47 @@ public class FrmTemperaturas extends JFrame {
     }
     
 
-    //private void btnGraficarClick() {
-        
+    private void btnGraficarClick() {
 
-    //}
-    
+        LocalDate desde = dccDesde.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate hasta = dccHasta.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        // Cambiar a la pestaña de grafica
+        tpTemperatura.setSelectedIndex(0);
+
+        // Filtrar los datos por fecha seleccionada
+        List<Temperatura> datosFiltrados = ServicioTemperatura.filtrarPorFecha(datos, desde, hasta);
+
+        if (datosFiltrados.isEmpty()) {
+            JOptionPane.showMessageDialog(null, " No hay datos en el rango seleccionado", "Información", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // Promedio por ciudad
+        Map<String, Double> promedioPorCiudad = ServicioTemperatura.calcularPromedioPorCiudad(datosFiltrados);
+
+
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        promedioPorCiudad.forEach((ciudad, promedio) -> dataset.addValue(promedio, "Promedio Temperatura", ciudad));
+
+        JFreeChart chart = ChartFactory.createBarChart(
+            "Grafica Promedio Temperatura vs Ciudad",
+            "Ciudad",
+            "Promedio Temperatura (°C)",
+            dataset,
+            PlotOrientation.VERTICAL,
+            true, true, false);
+
+        ChartPanel panel = new ChartPanel(chart);
+        panel.setPreferredSize(new Dimension(600, 400));
+        pnlGrafica.removeAll();
+        pnlGrafica.add(panel);
+        pnlGrafica.revalidate();
+        pnlGrafica.repaint();
+        SwingUtilities.getWindowAncestor(pnlGrafica).pack();
+
+    }
+        
 
     private void btnCiudadesClick() {
 
